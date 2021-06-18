@@ -1,0 +1,12 @@
+django
+djangorestframework
+django-cors-headers
+bs4
+scikit-learn
+pandas
+tqdm
+torch
+simpletransformers
+transformers
+gunicorn
+django-heroku
