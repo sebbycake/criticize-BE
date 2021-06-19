@@ -1,14 +1,12 @@
 import re
 import requests
 from bs4 import BeautifulSoup
-import random
 
-#["https://www.channelnewsasia.com"]
 class Scraper:
     def __init__(self):
         #We specify the websites in the order
         self.source = NewsSource
-        self.Sites_to_Scrape = ["https://www.channelnewsasia.com", "https://www.bbc.com/news"]
+        self.Sites_to_Scrape = ["https://www.channelnewsasia.com"] # "https://www.bbc.com/news"] 
         self.site_name = self.get_cat_name()
         self.all_soups = {self.site_name[i]: BeautifulSoup(requests.get(self.Sites_to_Scrape[i]).text, 'html.parser') for i in range(len(self.site_name))}
         ##Following the website's order, we create their classes with their soups
@@ -110,6 +108,7 @@ class channelnewsasia(NewsSource):
                          "a","teaser__title","div", "c-rte--article", False, False)
 
 
+"""
 class bbcnews(NewsSource):
     def __init__(self, site_being_scraped, soup):
         super(bbcnews, self).__init__(site_being_scraped, soup, "a", "nw-o-link",
@@ -118,7 +117,7 @@ class bbcnews(NewsSource):
                                       "div", "ssrcss-rgov1k-MainColumn e1sbfw0p0", True, True, "https://www.bbc.com")
                                   #Anything below here are additional tags required on top of the usuals ones
                                   #"h3", "gs-c-promo-heading__title gel-pica-bold nw-o-link-split__text")
-
+"""
 
 
 
@@ -174,83 +173,3 @@ class Category:
 
     def get_titles(self):
         return self.article_titles[:self.no_of_articles]
-
-'''
-
-#### General Template for Channel News Asia
-#Source == CNA
-
-url = 'https://www.channelnewsasia.com'
-html_text = requests.get(url).text
-LandingPageSoup = BeautifulSoup(html_text, 'lxml')
-
-
-## Links to Singapore, Asia, World, Business and Sport
-wanted_links = ["Singapore", "Asia", "World", "Business", "Sport"]
-all_links = LandingPageSoup.find_all("a", class_ = "nav-sections__list-item-link", href = True)
-
-## List of Tag Objects that are Singapore, Asia, World, Business and Sport
-all_wanted_obj = list(filter(lambda x: x.text in wanted_links, all_links))
-
-### Actual web Links of tag Objects
-all_links = list(map(lambda x: x.attrs["href"], all_wanted_obj))
-
-
-###Using 1 of the links from all_links
-html_text_by_topic = requests.get(all_links[0]).text
-new_soup = BeautifulSoup(html_text_by_topic, 'lxml')
-top_article = new_soup.find_all("a", class_ = "teaser__title", href = True)
-all_article_titles = list(map(lambda x: " ".join(x.text.split()), top_article))
-all_topic_links = list(map(lambda x: url + x.attrs["href"], top_article))
-
-
-
-
-### Finally accessing the article itself
-##Using 1 of the article
-html_text_article = requests.get(all_topic_links[0]).text
-newer_soup = BeautifulSoup(html_text_article, 'lxml')
-main_article = newer_soup.find("div", class_ = "c-rte--article")
-## The entire text content
-content = " ".join(list(map(lambda x: " ".join(x.text.split("\xa0")), main_article.find_all("p"))))
-
-
-
-
-'''
-
-
-
-
-
-'''
-
-news_source = LandingPageSoup.find_all('a', class_ = 'wEwyrc AVN2gc uQIVzc Sksgp')
-
-
-### Straits Time
-straits_numbering = get_numbering_of_news_source(news_source, "The Straits Times")
-all_extensions = get_all_href_of_articles(news_title, straits_numbering)
-straits_header = "https://news.google.com"
-all_full_sites = list(map(lambda x: straits_header + x, all_extensions))
-
-
-htmlasdas = requests.get(all_full_sites[0]).text
-soup = BeautifulSoup(htmlasdas, 'lxml')
-soup.find_all("h1", class_ = "headline node-title")
-
-
-
-## Template for Straits Time
-#Using the first link
-driver = webdriver.PhantomJS(executable_path="C:\\Users\\65964\\Downloads\\phantomjs-2.1.1-windows\\phantomjs-2.1.1-windows\\bin\\phantomjs")
-driver.get(all_full_sites[0])
-straits_html = driver.page_source
-soup = BeautifulSoup(straits_html, "lxml")
-soup.find_all("h1", "headline node-title")
-
-
-
-
-'''
-
