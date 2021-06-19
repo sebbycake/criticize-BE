@@ -119,9 +119,6 @@ class bbcnews(NewsSource):
                                   #"h3", "gs-c-promo-heading__title gel-pica-bold nw-o-link-split__text")
 """
 
-
-
-
 class Category:
     
     #may accept varargs at the back
