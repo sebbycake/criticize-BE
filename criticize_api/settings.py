@@ -5,10 +5,9 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 SECRET_KEY = os.environ.get('SECRET_KEY_CRITICIZE')
 
-DEBUG = (os.environ.get('DEBUG_VALUE_CRITICIZE') == 'True')
+DEBUG = (os.environ.get('DEBUG_CRITICIZE') == 'True')
 
 ALLOWED_HOSTS = ['*']
 
@@ -36,6 +35,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'criticize_api.urls'

@@ -1,14 +1,14 @@
 import re
 import requests
-import random
 from bs4 import BeautifulSoup
+import random
 
-'''["https://www.channelnewsasia.com"]'''
+#["https://www.channelnewsasia.com"]
 class Scraper:
     def __init__(self):
         #We specify the websites in the order
         self.source = NewsSource
-        self.Sites_to_Scrape = ["https://www.channelnewsasia.com/", "https://www.bbc.com/news"]
+        self.Sites_to_Scrape = ["https://www.channelnewsasia.com", "https://www.bbc.com/news"]
         self.site_name = self.get_cat_name()
         self.all_soups = {self.site_name[i]: BeautifulSoup(requests.get(self.Sites_to_Scrape[i]).text, 'html.parser') for i in range(len(self.site_name))}
         ##Following the website's order, we create their classes with their soups
@@ -32,13 +32,7 @@ class Scraper:
         to_return = []
         for i in range(len(self.site_name)):
             to_return.extend(eval(self.site_name[i]).article_titles())
-        return self.randomize(to_return, len(to_return))
-
-    def randomize(self, arr, n):
-        for i in range(n-1,0,-1):
-            j = random.randint(0, i+1)
-            arr[i], arr[j] = arr[j], arr[i]
-        return arr
+        return to_return
 
 
 class NewsSource:
@@ -66,17 +60,15 @@ class NewsSource:
         
     def make_classes(self, get_article_tag, get_article_class, arti_tag, arti_class):
         lst = dict()
-        i = 0
-        for dom in self.all_link_domains:
+        for key, value in self.all_link_domains.items():
             if self.need_trunc_link:
-                new_Cat = Category(self.scraping_site, dom, self.article_per_domain, get_article_tag,
+                new_Cat = Category(self.scraping_site, value, self.article_per_domain, get_article_tag,
                                get_article_class, arti_tag, arti_class, self.trunc_link[0])
             else:
-                new_Cat = Category(self.scraping_site, dom, self.article_per_domain, get_article_tag,
+                new_Cat = Category(self.scraping_site, value, self.article_per_domain, get_article_tag,
                                get_article_class, arti_tag, arti_class)
             
-            lst[self.domains[i]] = new_Cat
-            i += 1
+            lst[key] = new_Cat
         return lst
 
 
@@ -104,11 +96,11 @@ class NewsSource:
         all_links = self.soup.find_all(self.tag, class_ = self.class_field, href = True)
         all_wanted_obj = list(filter(lambda x: x.text in self.domains, all_links))
         if (self.need_link):
-            all_links = set(map(lambda x: self.trunc_link[0] + x.attrs["href"], all_wanted_obj))
+            all_links = dict(map(lambda x: (x.text, self.trunc_link[0] + x.attrs["href"]), all_wanted_obj))
         else:
-            all_links = set(map(lambda x: x.attrs["href"], all_wanted_obj))
-        return list(all_links)
-        
+            all_links = dict(map(lambda x: (x.text, x.attrs["href"]), all_wanted_obj))
+        return all_links
+    
 
 
 class channelnewsasia(NewsSource):
@@ -117,12 +109,13 @@ class channelnewsasia(NewsSource):
         super(channelnewsasia, self).__init__(site_being_scraped, soup, "a", "nav-sections__list-item-link", ["Singapore", "Asia", "World", "Business", "Sport"],
                          "a","teaser__title","div", "c-rte--article", False, False)
 
+
 class bbcnews(NewsSource):
     def __init__(self, site_being_scraped, soup):
         super(bbcnews, self).__init__(site_being_scraped, soup, "a", "nw-o-link",
-                                  ["Coronavirus", "World", "Asia", "UK", "Business", "Tech", "Science"],
-                                  "a", "gs-c-promo-heading gs-o-faux-block-link__overlay-link gel-pica-bold nw-o-link-split__anchor",
-                                  "div", "ssrcss-rgov1k-MainColumn e1sbfw0p0", True, True, "https://www.bbc.com")
+                                      ["Business", "Coronavirus", "Science", "World", "UK", "Tech", "Asia"],
+                                      "a", "gs-c-promo-heading gs-o-faux-block-link__overlay-link gel-pica-bold nw-o-link-split__anchor",
+                                      "div", "ssrcss-rgov1k-MainColumn e1sbfw0p0", True, True, "https://www.bbc.com")
                                   #Anything below here are additional tags required on top of the usuals ones
                                   #"h3", "gs-c-promo-heading__title gel-pica-bold nw-o-link-split__text")
 
@@ -141,8 +134,12 @@ class Category:
         self.soup = BeautifulSoup(requests.get(category_link).text, 'html.parser')
         self.no_of_articles = no_articles
         self.all_articles = self.soup.find_all(get_article_tag, class_ = get_article_class, href= True)
-        self.article_titles = list(map(lambda x: " ".join(x.text.split()), self.all_articles))
+        self.article_titles = list(set(map(lambda x: " ".join(x.text.split()), self.all_articles)))
         self.article_links = self.get_article_links()
+
+
+        self.lmao = get_article_tag
+        self.looo = get_article_class
 
 
         self.arti_tag = arti_tag
@@ -153,8 +150,10 @@ class Category:
 
     def get_article_links(self):
         if len(self.trunc_link) == 0:
-            return list(map(lambda stuff: self.main_link + stuff.attrs["href"], self.all_articles))
-        return list(map(lambda stuff: self.trunc_link[0] + stuff.attrs["href"], self.all_articles))
+            return list(set(map(lambda stuff: self.main_link + stuff.attrs["href"], self.all_articles)))
+        return list(set(map(lambda stuff: self.trunc_link[0] + stuff.attrs["href"]
+                        if not re.match(r'^%s' % self.trunc_link[0], stuff.attrs["href"]) else stuff.attrs["href"]
+                        , self.all_articles)))
 
         
     def all_articles_full_text(self):
@@ -172,5 +171,86 @@ class Category:
         return my_texts
 
 
+
     def get_titles(self):
         return self.article_titles[:self.no_of_articles]
+
+'''
+
+#### General Template for Channel News Asia
+#Source == CNA
+
+url = 'https://www.channelnewsasia.com'
+html_text = requests.get(url).text
+LandingPageSoup = BeautifulSoup(html_text, 'lxml')
+
+
+## Links to Singapore, Asia, World, Business and Sport
+wanted_links = ["Singapore", "Asia", "World", "Business", "Sport"]
+all_links = LandingPageSoup.find_all("a", class_ = "nav-sections__list-item-link", href = True)
+
+## List of Tag Objects that are Singapore, Asia, World, Business and Sport
+all_wanted_obj = list(filter(lambda x: x.text in wanted_links, all_links))
+
+### Actual web Links of tag Objects
+all_links = list(map(lambda x: x.attrs["href"], all_wanted_obj))
+
+
+###Using 1 of the links from all_links
+html_text_by_topic = requests.get(all_links[0]).text
+new_soup = BeautifulSoup(html_text_by_topic, 'lxml')
+top_article = new_soup.find_all("a", class_ = "teaser__title", href = True)
+all_article_titles = list(map(lambda x: " ".join(x.text.split()), top_article))
+all_topic_links = list(map(lambda x: url + x.attrs["href"], top_article))
+
+
+
+
+### Finally accessing the article itself
+##Using 1 of the article
+html_text_article = requests.get(all_topic_links[0]).text
+newer_soup = BeautifulSoup(html_text_article, 'lxml')
+main_article = newer_soup.find("div", class_ = "c-rte--article")
+## The entire text content
+content = " ".join(list(map(lambda x: " ".join(x.text.split("\xa0")), main_article.find_all("p"))))
+
+
+
+
+'''
+
+
+
+
+
+'''
+
+news_source = LandingPageSoup.find_all('a', class_ = 'wEwyrc AVN2gc uQIVzc Sksgp')
+
+
+### Straits Time
+straits_numbering = get_numbering_of_news_source(news_source, "The Straits Times")
+all_extensions = get_all_href_of_articles(news_title, straits_numbering)
+straits_header = "https://news.google.com"
+all_full_sites = list(map(lambda x: straits_header + x, all_extensions))
+
+
+htmlasdas = requests.get(all_full_sites[0]).text
+soup = BeautifulSoup(htmlasdas, 'lxml')
+soup.find_all("h1", class_ = "headline node-title")
+
+
+
+## Template for Straits Time
+#Using the first link
+driver = webdriver.PhantomJS(executable_path="C:\\Users\\65964\\Downloads\\phantomjs-2.1.1-windows\\phantomjs-2.1.1-windows\\bin\\phantomjs")
+driver.get(all_full_sites[0])
+straits_html = driver.page_source
+soup = BeautifulSoup(straits_html, "lxml")
+soup.find_all("h1", "headline node-title")
+
+
+
+
+'''
+
