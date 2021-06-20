@@ -9,4 +9,3 @@ torch
 simpletransformers
 transformers
 gunicorn
-django-heroku
