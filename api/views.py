@@ -1,11 +1,45 @@
 import json
-# from simpletransformers.t5 import T5Model
+from simpletransformers.t5 import T5Model
 from transformers import pipeline
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from django.views.decorators.cache import cache_page
 from .scraper import Scraper
 from .recommendations import get_json_data
+
+model_args = {
+    "reprocess_input_data": True,
+    "overwrite_output_dir": True,
+    "max_seq_length": 128,
+    "eval_batch_size": 16,
+    "num_train_epochs": 1,
+    "save_eval_checkpoints": False,
+    "use_multiprocessing": False,
+    # "silent": True,
+    "num_beams": None,
+    "do_sample": True,
+    "max_length": 50,
+    "top_k": 50,
+    "top_p": 0.95,
+    "num_return_sequences": 10,
+}
+
+MODEL = T5Model("t5", "outputs/best_model", args=model_args, use_cuda=False)
+
+@api_view(['POST'])
+def generate_questions(request):
+    try:
+        json_req = json.loads(request.body) 
+        article = json_req['article']
+        # concantenate with task prefix
+        query = "ask_question: " + article
+        # prefix output
+        preds = MODEL.predict([query])
+        qn_list = preds[0]
+        json_data = [{'id': index, 'question': qn} for index, qn in enumerate(qn_list, 1)]
+        return Response(json_data, status=200)
+    except KeyError:
+        return Response({"error": "Please input a news article content"}, status=400)
 
 scraper = Scraper()
 
