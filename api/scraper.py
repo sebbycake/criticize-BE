@@ -8,7 +8,7 @@ class Scraper:
         self.source = NewsSource
         self.Sites_to_Scrape = ["https://www.channelnewsasia.com"] #"https://www.bbc.com/news"]
         self.site_name = self.get_cat_name()
-        self.all_soups = {self.site_name[i]: BeautifulSoup(requests.get(self.Sites_to_Scrape[i]).text, 'lxml') for i in range(len(self.site_name))}
+        self.all_soups = {self.site_name[i]: BeautifulSoup(requests.get(self.Sites_to_Scrape[i]).text, 'html.parser') for i in range(len(self.site_name))}
         ##Following the website's order, we create their classes with their soups
         ## We must have already created its class and specified its arguments
         self.all_categories = self.create_cat_classes()
@@ -129,7 +129,7 @@ class Category:
         self.cat = category_link
         self.trunc_link = list(trunc_link)
         self.main_link = main_landing_link
-        self.soup = BeautifulSoup(requests.get(category_link).text, 'lxml')
+        self.soup = BeautifulSoup(requests.get(category_link).text, 'html.parser')
         self.no_of_articles = no_articles
         self.all_articles = self.soup.find_all(get_article_tag, class_ = get_article_class, href= True)
         self.article_titles = list(set(map(lambda x: " ".join(x.text.split()), self.all_articles)))
@@ -158,7 +158,7 @@ class Category:
         my_texts = []
         links = self.article_links[:self.no_of_articles]
         for link in links:
-            my_soup = BeautifulSoup(requests.get(link).text, 'lxml')
+            my_soup = BeautifulSoup(requests.get(link).text, 'html.parser')
             content = self.run_trials(my_soup)
             my_texts.append(content)
         return my_texts
