@@ -6,9 +6,9 @@ class Scraper:
     def __init__(self):
         #We specify the websites in the order
         self.source = NewsSource
-        self.Sites_to_Scrape = ["https://www.channelnewsasia.com"] #"https://www.bbc.com/news"]
+        self.Sites_to_Scrape = ["https://www.channelnewsasia.com","https://www.bbc.com/news"]
         self.site_name = self.get_cat_name()
-        self.all_soups = {self.site_name[i]: BeautifulSoup(requests.get(self.Sites_to_Scrape[i]).text, 'html.parser') for i in range(len(self.site_name))}
+        self.all_soups = {self.site_name[i]: BeautifulSoup(requests.get(self.Sites_to_Scrape[i]).text, 'lxml') for i in range(len(self.site_name))}
         ##Following the website's order, we create their classes with their soups
         ## We must have already created its class and specified its arguments
         self.all_categories = self.create_cat_classes()
@@ -67,10 +67,6 @@ class NewsSource:
             
             lst[key] = new_Cat
         return lst
-
-
-    #def me(self):
-     #   print(self.all_domain_classes)
     
 
     def article_titles(self):
@@ -106,9 +102,6 @@ class channelnewsasia(NewsSource):
         super(channelnewsasia, self).__init__(site_being_scraped, soup, "a", "nav-sections__list-item-link", ["Singapore", "Asia", "World", "Business", "Sport"],
                          "a","teaser__title","div", "c-rte--article", False, False)
 
-
-'''
-
 class bbcnews(NewsSource):
     def __init__(self, site_being_scraped, soup):
         super(bbcnews, self).__init__(site_being_scraped, soup, "a", "nw-o-link",
@@ -117,7 +110,6 @@ class bbcnews(NewsSource):
                                       "div", "ssrcss-rgov1k-MainColumn e1sbfw0p0", True, True, "https://www.bbc.com")
                                   #Anything below here are additional tags required on top of the usuals ones
                                   #"h3", "gs-c-promo-heading__title gel-pica-bold nw-o-link-split__text")
-'''
 
 
 
@@ -129,10 +121,10 @@ class Category:
         self.cat = category_link
         self.trunc_link = list(trunc_link)
         self.main_link = main_landing_link
-        self.soup = BeautifulSoup(requests.get(category_link).text, 'html.parser')
+        self.soup = BeautifulSoup(requests.get(category_link).text, 'lxml')
         self.no_of_articles = no_articles
         self.all_articles = self.soup.find_all(get_article_tag, class_ = get_article_class, href= True)
-        self.article_titles = list(set(map(lambda x: " ".join(x.text.split()), self.all_articles)))
+        self.article_titles = list(map(lambda x: " ".join(x.text.split()), self.all_articles))
         self.article_links = self.get_article_links()
 
 
@@ -148,17 +140,17 @@ class Category:
 
     def get_article_links(self):
         if len(self.trunc_link) == 0:
-            return list(set(map(lambda stuff: self.main_link + stuff.attrs["href"], self.all_articles)))
-        return list(set(map(lambda stuff: self.trunc_link[0] + stuff.attrs["href"]
+            return list(map(lambda stuff: self.main_link + stuff.attrs["href"], self.all_articles))
+        return list(map(lambda stuff: self.trunc_link[0] + stuff.attrs["href"]
                         if not re.match(r'^%s' % self.trunc_link[0], stuff.attrs["href"]) else stuff.attrs["href"]
-                        , self.all_articles)))
+                        , self.all_articles))
 
         
     def all_articles_full_text(self):
         my_texts = []
         links = self.article_links[:self.no_of_articles]
         for link in links:
-            my_soup = BeautifulSoup(requests.get(link).text, 'html.parser')
+            my_soup = BeautifulSoup(requests.get(link).text, 'lxml')
             content = self.run_trials(my_soup)
             my_texts.append(content)
         return my_texts
@@ -171,6 +163,7 @@ class Category:
                 content = " ".join(list(map(lambda j: " ".join(j.text.split("\xa0")), main_article.find_all("p"))))
                 return content
         return "No text available"
+                  
             
     def get_titles(self):
         return self.article_titles[:self.no_of_articles]
