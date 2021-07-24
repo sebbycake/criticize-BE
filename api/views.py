@@ -50,6 +50,7 @@ def scrape_articles(request):
     global_articles = scraper.get_source_and_title()
     return Response(global_articles, status=200)
 
+@cache_page(60 * 60)
 @api_view(['POST'])
 def get_related_articles(request):
     try:
@@ -63,15 +64,15 @@ def get_related_articles(request):
         return Response({"error": "Get the top daily news first"}, status=400)
 
 
-@api_view(['POST'])
-def summarize_article(request):
-    try:
-        json_req = json.loads(request.body) 
-        article = json_req['article'][:1024]
-        summarizer = pipeline("summarization")
-        summarized_article = summarizer(article, min_length=5, max_length=512)[0]
-        return Response(summarized_article, status=200)
-    except KeyError:
-        return Response({"error": "Please input a news article content"}, status=400)
+# @api_view(['POST'])
+# def summarize_article(request):
+#     try:
+#         json_req = json.loads(request.body) 
+#         article = json_req['article'][:1024]
+#         summarizer = pipeline("summarization")
+#         summarized_article = summarizer(article, min_length=5, max_length=512)[0]
+#         return Response(summarized_article, status=200)
+#     except KeyError:
+#         return Response({"error": "Please input a news article content"}, status=400)
 
 

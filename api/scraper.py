@@ -6,7 +6,7 @@ class Scraper:
     def __init__(self):
         #We specify the websites in the order
         self.source = NewsSource
-        self.Sites_to_Scrape = ["https://www.channelnewsasia.com","https://www.bbc.com/news"]
+        self.Sites_to_Scrape = ["https://www.channelnewsasia.com"] #"https://www.bbc.com/news"]
         self.site_name = self.get_cat_name()
         self.all_soups = {self.site_name[i]: BeautifulSoup(requests.get(self.Sites_to_Scrape[i]).text, 'html.parser') for i in range(len(self.site_name))}
         ##Following the website's order, we create their classes with their soups
